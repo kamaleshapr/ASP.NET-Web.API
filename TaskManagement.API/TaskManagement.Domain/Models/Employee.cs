@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskManagement.Domain.Models
 {
@@ -19,5 +20,10 @@ namespace TaskManagement.Domain.Models
         public EmployeeRole Role { get; set; }
 
         public ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
+
+        // EF Core only maps properties that have both a getter and a setter, since this have getter only,so it will be ignored - if required, uncomment it
+        //[NotMapped]
+        //public string FullName => $"{FirstName} {LastName}";
+
     }
 }

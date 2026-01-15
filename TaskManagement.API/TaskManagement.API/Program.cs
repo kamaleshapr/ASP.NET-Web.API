@@ -1,7 +1,25 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using TaskManagement.Business;
 using TaskManagement.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+#region CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MyCustomPolicy", options =>
+    {
+        options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
+#endregion
+
+#region AutoMapper
+builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
+#endregion
+
+
 builder.Services.AddSwaggerGen();
 // Add services to the container.
 

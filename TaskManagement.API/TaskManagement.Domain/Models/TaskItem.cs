@@ -16,7 +16,7 @@ namespace TaskManagement.Domain.Models
         [Required]
         public TaskStatus Status { get; set; }
         [Required]
-        public DateTime DueDate { get; set; }
+        public DateOnly DueDate { get; set; }
         [Required]
         public int AssignedToEmployeeId { get; set; }
 
