@@ -2,10 +2,10 @@
 {
     public enum EmployeeRole
     {
-        Admin,
-        Manager,
-        Developer,
-        Tester,
-        Support
+        Developer = 1,
+        Manager = 2,
+        Support = 3,
+        Tester = 4,
+        Admin = 5
     }
 }
