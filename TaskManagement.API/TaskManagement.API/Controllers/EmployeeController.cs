@@ -54,6 +54,7 @@ namespace TaskManagement.API.Controllers
                 _db.Employees.Add(employee);
                 _db.SaveChanges();
 
+                return Created("",_mapper.Map<EmployeeDto>(employee));
             }
             else
             {
