@@ -9,7 +9,7 @@ using TaskManagement.Domain.Models;
 
 namespace TaskManagement.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/employee/[action]")]
     [ApiController]
     public class EmployeeController : ControllerBase
     {
@@ -21,6 +21,7 @@ namespace TaskManagement.API.Controllers
             _mapper = mapper;
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet]
         public IActionResult Get()
         {
@@ -28,14 +29,22 @@ namespace TaskManagement.API.Controllers
             return Ok(_mapper.Map<List<EmployeeDto>>(employees));
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet]
-        [Route("{id}")]
+        [Route("id")]
         public IActionResult Get(int id)
         {
             var employee = _db.Employees.Include(e => e.AssignedTasks).FirstOrDefault(x => x.EmployeeId == id);
+            if (employee == null)
+            {
+                return NotFound(id);
+            }
             return Ok(_mapper.Map<EmployeeDto>(employee));
         }
 
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]
         public IActionResult Register(EmployeeCreateDto employeeCreateDto)
         {
@@ -45,7 +54,6 @@ namespace TaskManagement.API.Controllers
                 _db.Employees.Add(employee);
                 _db.SaveChanges();
 
-                return Ok(_mapper.Map<EmployeeDto>(employee));
             }
             else
             {
@@ -53,6 +61,9 @@ namespace TaskManagement.API.Controllers
             }
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut]
         public IActionResult Edit(EmployeeEditDto employeeEditDto)
         {
@@ -74,6 +85,8 @@ namespace TaskManagement.API.Controllers
             }
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete]
         public IActionResult Delete(int id)
         {

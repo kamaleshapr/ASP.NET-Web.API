@@ -20,6 +20,8 @@ namespace TaskManagement.API.Controllers
             _mapper = mapper;
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet]
         public IActionResult Get()
         {
@@ -27,14 +29,23 @@ namespace TaskManagement.API.Controllers
             return Ok(_mapper.Map<List<TaskItemDto>>(taskItems));
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet]
         [Route("{id}")]
         public IActionResult Get(int id)
         {
             var taskItem = _db.TaskItems.Include(t => t.AssignedTo).FirstOrDefault(x => x.TaskId == id);
+            if (taskItem == null)
+            {
+                return NotFound(id);
+            }
             return Ok(_mapper.Map<TaskItemDto>(taskItem));
         }
 
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]
         public IActionResult Create(TaskItemCreateDto taskItemCreateDto)
         {
@@ -43,7 +54,7 @@ namespace TaskManagement.API.Controllers
             {
                 _db.TaskItems.Add(taskItem);
                 _db.SaveChanges();
-                return Ok(_mapper.Map<TaskItemDto>(taskItem));
+                return Created("",_mapper.Map<TaskItemDto>(taskItem));
             }
             else
             {
@@ -51,6 +62,9 @@ namespace TaskManagement.API.Controllers
             }
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut]
         public IActionResult Update(TaskItemUpdateDto taskItemUpdateDto)
         {
@@ -72,6 +86,8 @@ namespace TaskManagement.API.Controllers
             }
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete]
         public IActionResult Delete(int id)
         {
