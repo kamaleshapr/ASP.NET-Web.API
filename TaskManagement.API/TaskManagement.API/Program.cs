@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManagement.Business;
 using TaskManagement.Data;
+using TaskManagement.Data.Repository;
+using TaskManagement.Domain.IRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,13 @@ builder.Services.AddCors(options =>
 
 #region AutoMapper
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
+#endregion
+
+#region DI
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
+
+
 #endregion
 
 

@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 using TaskManagement.Business.DTO;
 using TaskManagement.Data;
+using TaskManagement.Domain.IRepository;
 using TaskManagement.Domain.Models;
 
 namespace TaskManagement.API.Controllers
@@ -12,20 +14,20 @@ namespace TaskManagement.API.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private readonly TaskManageDbContext _db;
+        private readonly ITaskItemRepository _taskItemRepo;
         private IMapper _mapper;
-        public TaskController(TaskManageDbContext db, IMapper mapper)
+        public TaskController(ITaskItemRepository taskItemRepo, IMapper mapper)
         {
-            _db = db;
+            _taskItemRepo = taskItemRepo;
             _mapper = mapper;
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            var taskItems = _db.TaskItems.Include(t => t.AssignedTo).ToList();
+            var taskItems = await _taskItemRepo.GetAllTaskAsync();
             return Ok(_mapper.Map<List<TaskItemDto>>(taskItems));
         }
 
@@ -33,9 +35,9 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet]
         [Route("{id}")]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            var taskItem = _db.TaskItems.Include(t => t.AssignedTo).FirstOrDefault(x => x.TaskId == id);
+            var taskItem = await _taskItemRepo.GetTaskByIdAsync(x => x.TaskId == id);
             if (taskItem == null)
             {
                 return NotFound(id);
@@ -47,13 +49,12 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]
-        public IActionResult Create(TaskItemCreateDto taskItemCreateDto)
+        public async Task<IActionResult> Create(TaskItemCreateDto taskItemCreateDto)
         {
             var taskItem = _mapper.Map<TaskItem>(taskItemCreateDto);
             if (ModelState.IsValid)
             {
-                _db.TaskItems.Add(taskItem);
-                _db.SaveChanges();
+                await _taskItemRepo.CreateAsync(taskItem);
                 return Created("",_mapper.Map<TaskItemDto>(taskItem));
             }
             else
@@ -66,9 +67,9 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut]
-        public IActionResult Update(TaskItemUpdateDto taskItemUpdateDto)
+        public async Task<IActionResult> Update(TaskItemUpdateDto taskItemUpdateDto)
         {
-            var task = _db.TaskItems.AsNoTracking().FirstOrDefault(x => x.TaskId == taskItemUpdateDto.TaskId);
+            var task = await _taskItemRepo.GetTaskByIdAsync(x => x.TaskId == taskItemUpdateDto.TaskId);
             if (task == null)
             {
                 return NotFound();
@@ -76,8 +77,7 @@ namespace TaskManagement.API.Controllers
             var taskItem = _mapper.Map<TaskItem>(taskItemUpdateDto);
             if (ModelState.IsValid)
             {
-                _db.TaskItems.Update(taskItem);
-                _db.SaveChanges();
+                await _taskItemRepo.UpdateAsync(taskItem);
                 return Ok(_mapper.Map<TaskItemDto>(taskItem));
             }
             else
@@ -89,15 +89,14 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var taskItem = _db.TaskItems.FirstOrDefault(x => x.TaskId == id);
+            var taskItem = await _taskItemRepo.GetTaskByIdAsync(x => x.TaskId == id);
             if (taskItem == null)
             {
                 return NotFound();
             }
-            _db.TaskItems.Remove(taskItem);
-            _db.SaveChanges();
+            await _taskItemRepo.DeleteAsync(taskItem);
             return Ok();
         }
     }

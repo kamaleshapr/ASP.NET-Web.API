@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Threading.Tasks;
 using TaskManagement.Business.DTO;
 using TaskManagement.Data;
+using TaskManagement.Data.Repository;
+using TaskManagement.Domain.IRepository;
 using TaskManagement.Domain.Models;
 
 namespace TaskManagement.API.Controllers
@@ -13,19 +16,19 @@ namespace TaskManagement.API.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        private readonly TaskManageDbContext _db;
+        private readonly IEmployeeRepository _employeeRepo;
         private IMapper _mapper;
-        public EmployeeController(TaskManageDbContext db, IMapper mapper)
+        public EmployeeController(IEmployeeRepository employeeRepo, IMapper mapper)
         {
-            _db = db;
+            _employeeRepo = employeeRepo;
             _mapper = mapper;
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet]
-        public IActionResult Get()
+        public async Task<ActionResult> Get()
         {
-            var employees = _db.Employees.Include(e => e.AssignedTasks).ToList();
+            var employees = await _employeeRepo.GetAllEmployeeAsync();
             return Ok(_mapper.Map<List<EmployeeDto>>(employees));
         }
 
@@ -33,9 +36,9 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet]
         [Route("id")]
-        public IActionResult Get(int id)
+        public async Task<ActionResult> Get(int id)
         {
-            var employee = _db.Employees.Include(e => e.AssignedTasks).FirstOrDefault(x => x.EmployeeId == id);
+            var employee =await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == id);
             if (employee == null)
             {
                 return NotFound(id);
@@ -46,14 +49,13 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]
-        public IActionResult Register(EmployeeCreateDto employeeCreateDto)
+        public async Task<ActionResult> Register(EmployeeCreateDto employeeCreateDto)
         {
             if (ModelState.IsValid)
             { 
                 var employee = _mapper.Map<Employee>(employeeCreateDto);
-                _db.Employees.Add(employee);
-                _db.SaveChanges();
-
+                await _employeeRepo.CreateAsync(employee);
+                employee = await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == employee.EmployeeId);
                 return Created("",_mapper.Map<EmployeeDto>(employee));
             }
             else
@@ -66,9 +68,9 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut]
-        public IActionResult Edit(EmployeeEditDto employeeEditDto)
+        public async Task<ActionResult> Edit(EmployeeEditDto employeeEditDto)
         {
-            var emp = _db.Employees.AsNoTracking().FirstOrDefault(x => x.EmployeeId == employeeEditDto.EmployeeId);
+            var emp = await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == employeeEditDto.EmployeeId);
             if (emp == null)
             {
                 return NotFound();
@@ -76,8 +78,7 @@ namespace TaskManagement.API.Controllers
             var employee = _mapper.Map<Employee>(employeeEditDto);
             if (ModelState.IsValid)
             {
-                _db.Employees.Update(employee);
-                _db.SaveChanges();
+                await _employeeRepo.UpdateAsync(employee);
                 return Ok(_mapper.Map<EmployeeDto>(employee));
             }
             else
@@ -89,15 +90,14 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete]
-        public IActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var employee = _db.Employees.FirstOrDefault(x => x.EmployeeId == id);
+            var employee = await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == id);
             if (employee == null)
             {
                 return NotFound();
             }
-            _db.Employees.Remove(employee);
-            _db.SaveChanges();
+            await _employeeRepo.DeleteAsync(employee);
             return Ok();
 
         }
