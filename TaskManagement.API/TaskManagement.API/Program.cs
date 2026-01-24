@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManagement.Business;
+using TaskManagement.Business.Services;
+using TaskManagement.Business.Services.Interface;
 using TaskManagement.Data;
 using TaskManagement.Data.Repository;
 using TaskManagement.Domain.IRepository;
@@ -25,7 +27,8 @@ builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
 
-
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 #endregion
 
 

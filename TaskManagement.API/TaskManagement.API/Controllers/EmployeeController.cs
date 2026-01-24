@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Threading.Tasks;
 using TaskManagement.Business.DTO;
+using TaskManagement.Business.Services.Interface;
 using TaskManagement.Data;
 using TaskManagement.Data.Repository;
 using TaskManagement.Domain.IRepository;
@@ -16,20 +17,18 @@ namespace TaskManagement.API.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        private readonly IEmployeeRepository _employeeRepo;
-        private IMapper _mapper;
-        public EmployeeController(IEmployeeRepository employeeRepo, IMapper mapper)
+        private readonly IEmployeeService _employeeService;
+        public EmployeeController(IEmployeeService employeeService)
         {
-            _employeeRepo = employeeRepo;
-            _mapper = mapper;
+            _employeeService = employeeService;
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet]
         public async Task<ActionResult> Get()
         {
-            var employees = await _employeeRepo.GetAllEmployeeAsync();
-            return Ok(_mapper.Map<List<EmployeeDto>>(employees));
+            var employees = await _employeeService.GetAllEmployeesAsync();
+            return Ok(employees);
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -38,12 +37,12 @@ namespace TaskManagement.API.Controllers
         [Route("id")]
         public async Task<ActionResult> Get(int id)
         {
-            var employee =await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == id);
+            var employee =await _employeeService.GetEmployeeByIdAsync(id);
             if (employee == null)
             {
                 return NotFound(id);
             }
-            return Ok(_mapper.Map<EmployeeDto>(employee));
+            return Ok(employee);
         }
 
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -53,10 +52,9 @@ namespace TaskManagement.API.Controllers
         {
             if (ModelState.IsValid)
             { 
-                var employee = _mapper.Map<Employee>(employeeCreateDto);
-                await _employeeRepo.CreateAsync(employee);
-                employee = await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == employee.EmployeeId);
-                return Created("",_mapper.Map<EmployeeDto>(employee));
+                var employee = await _employeeService.RegisterEmployeeAsync(employeeCreateDto);
+                employee = await _employeeService.GetEmployeeByIdAsync(employee.EmployeeId);
+                return Created("", await _employeeService.GetEmployeeByIdAsync(employee.EmployeeId));
             }
             else
             {
@@ -70,16 +68,15 @@ namespace TaskManagement.API.Controllers
         [HttpPut]
         public async Task<ActionResult> Edit(EmployeeEditDto employeeEditDto)
         {
-            var emp = await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == employeeEditDto.EmployeeId);
+            var emp = await _employeeService.GetEmployeeByIdAsync(employeeEditDto.EmployeeId);
             if (emp == null)
             {
                 return NotFound();
             }
-            var employee = _mapper.Map<Employee>(employeeEditDto);
             if (ModelState.IsValid)
             {
-                await _employeeRepo.UpdateAsync(employee);
-                return Ok(_mapper.Map<EmployeeDto>(employee));
+                await _employeeService.EditEmployeeAsync(employeeEditDto);
+                return Ok(await _employeeService.GetEmployeeByIdAsync(employeeEditDto.EmployeeId));
             }
             else
             {
@@ -92,14 +89,13 @@ namespace TaskManagement.API.Controllers
         [HttpDelete]
         public async Task<ActionResult> Delete(int id)
         {
-            var employee = await _employeeRepo.GetEmployeeByIdAsync(x => x.EmployeeId == id);
+            var employee = await _employeeService.GetEmployeeByIdAsync(id);
             if (employee == null)
             {
                 return NotFound();
             }
-            await _employeeRepo.DeleteAsync(employee);
+            await _employeeService.DeleteEmployeeAsync(id);
             return Ok();
-
         }
     }
 }

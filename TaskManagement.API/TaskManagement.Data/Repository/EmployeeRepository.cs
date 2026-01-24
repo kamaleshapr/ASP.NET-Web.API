@@ -20,12 +20,12 @@ namespace TaskManagement.Data.Repository
 
         public async Task<IEnumerable<Employee>> GetAllEmployeeAsync()
         {
-            return await _dbContext.Employees.Include(e => e.AssignedTasks).ToListAsync();
+            return await _dbContext.Employees.Include(e => e.AssignedTasks).AsNoTracking().ToListAsync();
         }
 
         public async Task<Employee> GetEmployeeByIdAsync(Expression<Func<Employee, bool>> condition)
         {
-            return await _dbContext.Employees.Include(e => e.AssignedTasks).FirstOrDefaultAsync(condition);
+            return await _dbContext.Employees.Include(e => e.AssignedTasks).AsNoTracking().FirstOrDefaultAsync(condition);
         }
 
         public async Task UpdateAsync(Employee employee)

@@ -14,7 +14,7 @@ namespace TaskManagement.Domain.Models
 
         public required string Description { get; set; }
         [Required]
-        public TaskStatus Status { get; set; }
+        public TaskStatus Status { get; set; } = TaskStatus.Pending;
         [Required]
         public DateOnly DueDate { get; set; }
         [Required]
@@ -23,6 +23,7 @@ namespace TaskManagement.Domain.Models
         [ForeignKey("AssignedToEmployeeId")]
         // Prevent JSON cycle by not serializing the parent navigation
         [JsonIgnore]
+        // Other effective option to restrict JSON cycle is DTO concept
         public Employee? AssignedTo { get; set; }
     }
 }

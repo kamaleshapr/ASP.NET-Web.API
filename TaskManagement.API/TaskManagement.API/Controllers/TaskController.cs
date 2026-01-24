@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using TaskManagement.Business.DTO;
+using TaskManagement.Business.Services.Interface;
 using TaskManagement.Data;
 using TaskManagement.Domain.IRepository;
 using TaskManagement.Domain.Models;
@@ -14,12 +15,10 @@ namespace TaskManagement.API.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private readonly ITaskItemRepository _taskItemRepo;
-        private IMapper _mapper;
-        public TaskController(ITaskItemRepository taskItemRepo, IMapper mapper)
+        private readonly ITaskItemService _taskItemService;
+        public TaskController(ITaskItemService taskItemService)
         {
-            _taskItemRepo = taskItemRepo;
-            _mapper = mapper;
+            _taskItemService = taskItemService;
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -27,8 +26,8 @@ namespace TaskManagement.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var taskItems = await _taskItemRepo.GetAllTaskAsync();
-            return Ok(_mapper.Map<List<TaskItemDto>>(taskItems));
+            var taskItems = await _taskItemService.GetAllTaskItemAsync();
+            return Ok(taskItems);
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -37,12 +36,12 @@ namespace TaskManagement.API.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var taskItem = await _taskItemRepo.GetTaskByIdAsync(x => x.TaskId == id);
+            var taskItem = await _taskItemService.GetTaskItemByIdAsync(id);
             if (taskItem == null)
             {
                 return NotFound(id);
             }
-            return Ok(_mapper.Map<TaskItemDto>(taskItem));
+            return Ok(taskItem);
         }
 
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -51,11 +50,9 @@ namespace TaskManagement.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(TaskItemCreateDto taskItemCreateDto)
         {
-            var taskItem = _mapper.Map<TaskItem>(taskItemCreateDto);
             if (ModelState.IsValid)
             {
-                await _taskItemRepo.CreateAsync(taskItem);
-                return Created("",_mapper.Map<TaskItemDto>(taskItem));
+                return Created("", await _taskItemService.CreateTaskItemAsync(taskItemCreateDto));
             }
             else
             {
@@ -67,18 +64,17 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut]
-        public async Task<IActionResult> Update(TaskItemUpdateDto taskItemUpdateDto)
+        public async Task<IActionResult> Update([FromBody] TaskItemUpdateDto taskItemUpdateDto)
         {
-            var task = await _taskItemRepo.GetTaskByIdAsync(x => x.TaskId == taskItemUpdateDto.TaskId);
+            var task = await _taskItemService.GetTaskItemByIdAsync(taskItemUpdateDto.TaskId);
             if (task == null)
             {
                 return NotFound();
             }
-            var taskItem = _mapper.Map<TaskItem>(taskItemUpdateDto);
             if (ModelState.IsValid)
             {
-                await _taskItemRepo.UpdateAsync(taskItem);
-                return Ok(_mapper.Map<TaskItemDto>(taskItem));
+                await _taskItemService.UpdateTaskItemAsync(taskItemUpdateDto);
+                return Ok(await _taskItemService.GetTaskItemByIdAsync(taskItemUpdateDto.TaskId));
             }
             else
             {
@@ -91,12 +87,12 @@ namespace TaskManagement.API.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {
-            var taskItem = await _taskItemRepo.GetTaskByIdAsync(x => x.TaskId == id);
+            var taskItem = await _taskItemService.GetTaskItemByIdAsync(id);
             if (taskItem == null)
             {
                 return NotFound();
             }
-            await _taskItemRepo.DeleteAsync(taskItem);
+            await _taskItemService.DeleteTaskItemAsync(id);
             return Ok();
         }
     }

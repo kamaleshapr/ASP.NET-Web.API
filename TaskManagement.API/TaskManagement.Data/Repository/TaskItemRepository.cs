@@ -19,12 +19,12 @@ namespace TaskManagement.Data.Repository
         }
         public async Task<IEnumerable<TaskItem>> GetAllTaskAsync()
         {
-            return await _dbContext.TaskItems.Include(e => e.AssignedTo).ToListAsync();
+            return await _dbContext.TaskItems.Include(e => e.AssignedTo).AsNoTracking().ToListAsync();
         }
 
         public async Task<TaskItem> GetTaskByIdAsync(Expression<Func<TaskItem, bool>> condition)
         {
-            return await _dbContext.TaskItems.Include(e => e.AssignedTo).FirstOrDefaultAsync(condition);
+            return await _dbContext.TaskItems.Include(e => e.AssignedTo).AsNoTracking().FirstOrDefaultAsync(condition);
         }
         public async Task UpdateAsync(TaskItem taskItem)
         {
