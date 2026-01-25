@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,7 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]
+        [Authorize(Roles = "ADMIN, MANAGER")]
         public async Task<IActionResult> Create(TaskItemCreateDto taskItemCreateDto)
         {
             if (ModelState.IsValid)
@@ -85,6 +87,7 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete]
+        [Authorize(Roles = "ADMIN, MANAGER")]
         public async Task<IActionResult> Delete(int id)
         {
             var taskItem = await _taskItemService.GetTaskItemByIdAsync(id);

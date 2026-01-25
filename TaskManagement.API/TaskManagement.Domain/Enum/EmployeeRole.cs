@@ -6,6 +6,7 @@
         Manager = 2,
         Support = 3,
         Tester = 4,
-        Admin = 5
+        HR = 5,
+        Admin = 6
     }
 }

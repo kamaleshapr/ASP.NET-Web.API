@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,7 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]
+        [Authorize(Roles = "ADMIN, MANAGER")]
         public async Task<ActionResult> Register(EmployeeCreateDto employeeCreateDto)
         {
             if (ModelState.IsValid)
@@ -66,6 +68,7 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut]
+        [Authorize(Roles = "ADMIN, MANAGER")]
         public async Task<ActionResult> Edit(EmployeeEditDto employeeEditDto)
         {
             var emp = await _employeeService.GetEmployeeByIdAsync(employeeEditDto.EmployeeId);
@@ -87,6 +90,7 @@ namespace TaskManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete]
+        [Authorize(Roles = "ADMIN, MANAGER")]
         public async Task<ActionResult> Delete(int id)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(id);
