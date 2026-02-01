@@ -12,7 +12,7 @@ using TaskManagement.Domain.Models;
 
 namespace TaskManagement.API.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/task/[action]")]
     [ApiController]
     public class TaskController : ControllerBase
     {

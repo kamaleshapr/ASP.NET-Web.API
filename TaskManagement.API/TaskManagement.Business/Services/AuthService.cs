@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -18,13 +19,15 @@ namespace TaskManagement.Business.Services
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private ApplicationUser? _applicationUser;
+        private readonly IEmailService _emailService;
+        private ApplicationUser _applicationUser;
         private IConfiguration _config;
-        public AuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        public AuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration, IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _config = configuration;
+            _emailService = emailService;
         }
         public async Task<IEnumerable<IdentityError>> Register(RegisterInput registerInput)
         {
@@ -33,12 +36,24 @@ namespace TaskManagement.Business.Services
             _applicationUser.LastName = registerInput.LastName;
             _applicationUser.Email = registerInput.Email;
             _applicationUser.UserName = registerInput.Email;
-            _applicationUser.EmployeeId = registerInput.EmployeeId;
+            if(registerInput.EmployeeId.HasValue)
+            {
+                _applicationUser.EmployeeId = registerInput.EmployeeId;
+            }
+            else
+            {
+                // Generate a new Employee record if id not provided or exist
+            }
             var result = await _userManager.CreateAsync(_applicationUser, registerInput.Password);
             if(result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(_applicationUser, "DEVELOPER");
+                var token = await GenerateEmailConfirmationTokenAsync(_applicationUser);
+                var baseUrl = _config["AppSettings:BaseUrl"] ?? throw new InvalidOperationException("BaseUrl is not configured.");
+                var confirmationLink = $"{baseUrl}user/Confirm-Email?userId={_applicationUser.Id}&token={token}";
+                await _emailService.SendRegistrationConfirmationEmailAsync(_applicationUser.Email, _applicationUser.FirstName, confirmationLink);
             }
+            
             return result.Errors;
         }
         public async Task<object> Login(LoginInput loginInput)
@@ -84,6 +99,41 @@ namespace TaskManagement.Business.Services
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<IdentityResult> ConfirmEmailAsync(string userId, string token)
+        {
+            if (userId == string.Empty || string.IsNullOrEmpty(token))
+                return IdentityResult.Failed(new IdentityError { Description = "Invalid token or user ID." });
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "User not found." });
+            var decodedBytes = WebEncoders.Base64UrlDecode(token);
+            var decodedToken = Encoding.UTF8.GetString(decodedBytes);
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            if (result.Succeeded)
+            {
+                // Uncomment for on real deployment
+                //var baseUrl = _config["AppSettings:BaseUrl"] ?? throw new InvalidOperationException("BaseUrl is not configured.");
+                //var loginLink = $"{baseUrl}/user/login";
+                //await _emailService.SendAccountCreatedEmailAsync(user.Email!, user.FirstName!, loginLink);
+            }
+            return result;
+        }
+
+        public Task SendEmailConfirmationAsync(string email)
+        {
+            // To be implemented while optimizing email functionality
+            throw new NotImplementedException();
+        }
+
+        private async Task<string> GenerateEmailConfirmationTokenAsync(ApplicationUser user)
+        {
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            return encodedToken;
         }
     }
 }

@@ -13,6 +13,6 @@ namespace TaskManagement.Business.Utils
         public required string Email { get; set; }
         public required string Password { get; set; }
 
-        public required int EmployeeId { get; set; }
+        public int? EmployeeId { get; set; }
     }
 }

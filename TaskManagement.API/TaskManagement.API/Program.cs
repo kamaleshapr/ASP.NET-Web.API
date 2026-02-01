@@ -40,13 +40,15 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 #endregion
 
 #region Db, Auth & Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.User.RequireUniqueEmail = true;
-}).AddEntityFrameworkStores<TaskManageDbContext>();
+    //options.User.RequireUniqueEmail = true;
+}).AddEntityFrameworkStores<TaskManageDbContext>()
+.AddDefaultTokenProviders();
 
 builder.Services.AddDbContext<TaskManageDbContext>(options =>
 {

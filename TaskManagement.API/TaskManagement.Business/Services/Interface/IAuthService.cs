@@ -13,5 +13,9 @@ namespace TaskManagement.Business.Services.Interface
         Task<IEnumerable<IdentityError>> Register(RegisterInput registerInput);
 
         Task<object> Login(LoginInput loginInput);
+
+        Task<IdentityResult> ConfirmEmailAsync(string userId, string token);
+
+        Task SendEmailConfirmationAsync(string email);
     }
 }

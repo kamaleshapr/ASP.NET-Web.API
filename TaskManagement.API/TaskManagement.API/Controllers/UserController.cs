@@ -6,7 +6,7 @@ using TaskManagement.Business.Utils;
 
 namespace TaskManagement.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/user")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -50,6 +50,22 @@ namespace TaskManagement.API.Controllers
                 return BadRequest(results);
             }
             return Ok(results);
+        }
+
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [Route("Confirm-Email")]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            // this method should not be exposed to user, but for demo purpose only we are exposing on swagger.
+            // ignore this for real deployment.
+            var results = await _authService.ConfirmEmailAsync(userId, token);
+            if (!results.Succeeded || results.Errors.Any())
+            {
+                return BadRequest(results.Errors);
+            }
+            return Ok("Registration Completed & Email Confirmed. You can proceed login with your credentials");
         }
     }
 }
